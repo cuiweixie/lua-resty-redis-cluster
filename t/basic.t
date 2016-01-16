@@ -24,7 +24,7 @@ run_tests();
 
 __DATA__
 
-=== TEST 1: module size of resty.redis
+=== TEST 1: set test
 --- http_config eval: $::HttpConfig
 --- config
     location = /t {
@@ -53,3 +53,34 @@ OK
 --- no_error_log
 [error]
 
+
+
+=== TEST 2: get test
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua '
+            local config = {
+                name = "test",
+                serv_list = {
+                    {ip="127.0.0.1", port = 3100},
+                    {ip="127.0.0.1", port = 3101},
+                    {ip="127.0.0.1", port = 3102},
+                    {ip="127.0.0.1", port = 3200},
+                    {ip="127.0.0.1", port = 3201},
+                    {ip="127.0.0.1", port = 3202},
+                },
+            }
+            local redis_cluster = require "resty.rediscluster"
+            local red_c = redis_cluster:new(config)
+            local ok, err = red_c:set("foo","bar")
+            local v,err = red_c:get("foo")
+            ngx.say(v)
+        ';
+    }
+--- request
+GET /t
+--- response_body
+bar
+--- no_error_log
+[error]
