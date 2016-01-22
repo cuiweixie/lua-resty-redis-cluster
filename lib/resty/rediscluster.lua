@@ -63,6 +63,14 @@ local function redis_slot(str)
     return clib.lua_redis_crc16(ffi.cast("char *", str), #str)
 end
 
+local function ip_string(ip)
+    if ip:match(":") then
+        return "[" .. ip .. "]"
+    end
+
+    return ip
+end
+
 local redis = require "resty.redis"
 
 redis.add_commands("cluster")
@@ -126,7 +134,7 @@ function _M.fetch_slots(self)
     for i=1,#serv_list do
         local ip = serv_list[i].ip
         local port = serv_list[i].port
-        local ok, err = red:connect(ip, port)
+        local ok, err = red:connect(ip_string(ip), port)
         if ok then
             local slot_info, err = red:cluster("slots")
             if slot_info then
@@ -202,7 +210,7 @@ local function _do_cmd(self, cmd, key, ...)
             local ip = serv_list[index].ip
             local port = serv_list[index].port
             redis_client = redis:new()
-            local ok, err = redis_client:connect(ip, port)
+            local ok, err = redis_client:connect(ip_string(ip), port)
             if ok then
                 slots[slot].cur = index
                 local res, err = redis_client[cmd](redis_client, key, ...)
@@ -265,7 +273,7 @@ function _M.commit_pipeline(self)
         local port = v.port
         local ins_reqs = v.reqs
         local ins = redis:new()
-        local ok, err = ins:connect(ip, port)
+        local ok, err = ins:connect(ip_string(ip), port)
 
         if ok then
             ins:init_pipeline()
