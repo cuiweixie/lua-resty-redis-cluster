@@ -260,10 +260,10 @@ function _M.commit_pipeline(self)
         local slot_item = slots[slot]
         local ip = slot_item.serv_list[slot_item.cur].ip
         local port = slot_item.serv_list[slot_item.cur].port
-        local inst_key = ip..tostring(key)
-        if not map[ins_key] then
+        local inst_key = ip..tostring(port)
+        if not map[inst_key] then
             map[inst_key] = {ip=ip,port=port,reqs={}}
-            map_ret[ins_key] = {}
+            map_ret[inst_key] = {}
         end
         local ins_req = map[inst_key].reqs
         ins_req[#ins_req+1] = reqs[i]
@@ -286,7 +286,7 @@ function _M.commit_pipeline(self)
                 end
             end
             local res, err = ins:commit_pipeline()
-            redis_client:set_keepalive(config.keepalive_timeout or DEFUALT_KEEPALIVE_TIMEOUT,
+            ins:set_keepalive(config.keepalive_timeout or DEFUALT_KEEPALIVE_TIMEOUT,
                                            config.keepalove_cons or DEFAULT_KEEPALIVE_CONS)
             if err then
                 return nil, err.." return from "..tostring(ip)..":"..tostring(port)
@@ -301,10 +301,10 @@ function _M.commit_pipeline(self)
         local ins_reqs = map[k].reqs
         local res = v
         for i=1,#ins_reqs do
-            req[ins_reqs[i].origin_index] =res[i]
+            ret[ins_reqs[i].origin_index] =res[i]
         end
     end
-    return res
+    return ret
 end
 
 function _M.cancel_pipeline(self)
