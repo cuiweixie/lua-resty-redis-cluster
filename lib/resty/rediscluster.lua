@@ -209,7 +209,7 @@ local function _do_cmd(self, cmd, key, ...)
         for i=1,#serv_list do
             local ip = serv_list[index].ip
             local port = serv_list[index].port
-            redis_client = redis:new()
+            local redis_client = redis:new()
             local ok, err = redis_client:connect(ip_string(ip), port)
             if ok then
                 slots[slot].cur = index
